@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>IPU Lah!</title>
+<meta name="description" content="Cuaca dan Indeks Pencemar Udara (IPU) untuk lokasi you, cakap terus terang ala Manglish.">
+<meta name="theme-color" content="#7cc6f2">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=DM+Mono:wght@500&family=Lilita+One&display=swap">
+<style>
+/* Layout: one mobile-first column of "stickers" on a tropical sky, hero gauge + mascot first, detail below */
+:root{
+  --bg:#dff1fb; --bg2:#bfe4f7; --paper:#ffffff; --ink:#14213d; --muted:#4b5b7a; --line:#14213d;
+  --sun:#ffcf3f; --hibiscus:#e8424f; --leaf:#24a866; --soft:#eef7fc;
+  --c1:#2f6fde; --c2:#22a45d; --c3:#f2c200; --c4:#f08a1c; --c5:#d7263d;
+  --f-display:'Lilita One','Arial Rounded MT Bold','Trebuchet MS',system-ui,sans-serif;
+  --f-body:'Baloo 2','Segoe UI',Roboto,system-ui,sans-serif;
+  --f-mono:'DM Mono',ui-monospace,Menlo,Consolas,monospace;
+  --cat:var(--c1);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1531; --bg2:#14204a; --paper:#17234a; --ink:#eef3ff; --muted:#aab8dc; --line:#c6d3ff;
+  --sun:#ffd75e; --hibiscus:#ff6b77; --leaf:#4fd18c; --soft:#1d2b58; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0c1531; --bg2:#14204a; --paper:#17234a; --ink:#eef3ff; --muted:#aab8dc; --line:#c6d3ff;
+  --sun:#ffd75e; --hibiscus:#ff6b77; --leaf:#4fd18c; --soft:#1d2b58; color-scheme:dark }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{overflow-x:clip}
+html,body{margin:0}
+body{background:var(--bg);background-image:radial-gradient(circle at 15% -10%,var(--bg2),transparent 55%);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5;min-height:100vh;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--hibiscus);outline-offset:2px;border-radius:8px}
+svg{display:block}
+.wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:12px 48px;display:grid;gap:20px}
+
+/* top bar */
+.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}
+.brand h1{font-family:var(--f-display);font-weight:400;font-size:2rem;line-height:1;margin:0;letter-spacing:.5px;transform:rotate(-2deg)}
+.brand h1 span{color:var(--hibiscus)}
+.brand small{display:block;font-size:.8rem;color:var(--muted);font-weight:600;line-height:1.2}
+.locbar{display:flex;gap:8px;align-items:center;min-width:0;flex:1 1 260px;justify-content:flex-end}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border:2.5px solid var(--line);border-radius:999px;padding:4px 12px 4px 8px;font-weight:700;min-width:0;box-shadow:2px 2px 0 var(--line)}
+.chip .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:46vw}
+.iconbtn{width:42px;height:42px;flex:none;display:grid;place-items:center;background:var(--sun);border:2.5px solid var(--line);border-radius:14px;box-shadow:3px 3px 0 var(--line);transition:transform .12s}
+.iconbtn:hover{transform:translate(-1px,-1px) rotate(-4deg)}
+.iconbtn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--line)}
+.iconbtn svg{width:22px;height:22px;color:#14213d}
+
+/* sticker cards */
+.card{background:var(--paper);border:2.5px solid var(--line);border-radius:20px;box-shadow:5px 5px 0 var(--line);padding:18px}
+.card h2{font-family:var(--f-display);font-weight:400;font-size:1.45rem;line-height:1.1;margin:0 0 4px;text-wrap:balance}
+.card .sub{color:var(--muted);font-size:.9rem;margin:0 0 14px}
+.tilt-l{transform:rotate(-.6deg)} .tilt-r{transform:rotate(.6deg)}
+
+/* hero */
+.hero{position:relative;overflow:hidden;background:color-mix(in srgb,var(--cat) 20%,var(--paper));padding:18px 18px 20px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center}
+@media (max-width:560px){.hero-grid{grid-template-columns:1fr}}
+.gaugebox{position:relative;max-width:340px;width:100%;margin:0 auto}
+.gaugeval{position:absolute;left:0;right:0;bottom:4px;text-align:center}
+.gaugeval .num{font-family:var(--f-display);font-size:clamp(3.2rem,14vw,4.6rem);line-height:.9;font-variant-numeric:tabular-nums;-webkit-text-stroke:2px var(--line);color:var(--paper);paint-order:stroke fill;text-shadow:3px 3px 0 var(--line)}
+.gaugeval .lbl{font-family:var(--f-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mascotbox{display:grid;justify-items:center;gap:6px;text-align:center}
+.mascot{width:min(220px,62vw);animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px) rotate(1.5deg)}}
+.pill{display:inline-block;font-family:var(--f-display);font-size:1.15rem;padding:4px 16px;border:2.5px solid var(--line);border-radius:999px;background:var(--cat);color:var(--catfg,#fff);box-shadow:3px 3px 0 var(--line);transform:rotate(-3deg)}
+.pill em{font-style:normal;font-family:var(--f-body);font-weight:600;font-size:.85rem;opacity:.9}
+.bubble{position:relative;background:var(--paper);border:2.5px solid var(--line);border-radius:18px;padding:12px 14px;font-weight:700;font-size:1.05rem;line-height:1.35;margin-top:12px;text-wrap:balance}
+.bubble:before{content:"";position:absolute;top:-12px;left:50%;width:18px;height:18px;background:var(--paper);border-left:2.5px solid var(--line);border-top:2.5px solid var(--line);transform:translateX(-50%) rotate(45deg)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;margin-top:12px;font-size:.82rem;color:var(--muted);font-family:var(--f-mono)}
+.meta b{color:var(--ink);font-weight:500}
+
+/* pollutants */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.pol{border:2px solid var(--line);border-radius:16px;padding:12px;background:var(--soft);display:grid;gap:6px;position:relative;min-width:0}
+.pol.dom{background:color-mix(in srgb,var(--pc) 18%,var(--paper))}
+.pol .hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.pol .nm{font-family:var(--f-display);font-size:1.25rem}
+.pol .val{font-family:var(--f-mono);font-size:.85rem;font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
+.pol .val b{color:var(--ink);font-size:1.05rem}
+.bar{height:12px;border:2px solid var(--line);border-radius:999px;background:var(--paper);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pc);border-right:2px solid var(--line);transition:width .8s cubic-bezier(.3,1.4,.5,1)}
+.pol .si{display:flex;justify-content:space-between;font-size:.8rem;font-weight:700}
+.pol p{margin:0;font-size:.85rem;color:var(--muted);line-height:1.35}
+.tag{position:absolute;top:-11px;right:10px;background:var(--hibiscus);color:#fff;border:2px solid var(--line);border-radius:8px;font-size:.7rem;font-weight:800;padding:0 7px;transform:rotate(4deg);letter-spacing:.04em;text-transform:uppercase}
+
+/* weather */
+.wxnow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center}
+.wxnow .big{width:96px;height:96px}
+.temp{font-family:var(--f-display);font-size:3.6rem;line-height:.9;font-variant-numeric:tabular-nums}
+.temp sup{font-size:1.4rem;vertical-align:top}
+.wxdesc{font-weight:700;font-size:1.05rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px}
+.stat{display:flex;gap:10px;align-items:center;border:2px dashed color-mix(in srgb,var(--line) 45%,transparent);border-radius:14px;padding:8px 10px;min-width:0}
+.stat svg{width:26px;height:26px;flex:none;color:var(--ink)}
+.stat .k{font-size:.72rem;font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);line-height:1.2}
+.stat .v{font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+.quip{margin-top:14px;background:var(--sun);color:#14213d;border:2px solid var(--line);border-radius:14px;padding:10px 12px;font-weight:700;transform:rotate(-.8deg)}
+
+.chart{width:100%;overflow-x:auto}
+.chart svg{width:100%;min-width:300px;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.78rem;color:var(--muted);margin-top:8px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:12px;height:12px;border-radius:4px;border:1.5px solid var(--line);display:inline-block}
+
+.days{display:grid;gap:6px}
+.day{display:grid;grid-template-columns:3.2rem 40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:6px 4px;border-bottom:2px dotted color-mix(in srgb,var(--line) 30%,transparent)}
+.day:last-child{border-bottom:0}
+.day .dn{font-weight:800}
+.day svg{width:38px;height:38px}
+.range{position:relative;height:10px;border-radius:999px;background:var(--soft);border:1.5px solid var(--line)}
+.range i{position:absolute;top:-1.5px;bottom:-1.5px;border-radius:999px;background:linear-gradient(90deg,var(--c1),var(--sun),var(--hibiscus));border:1.5px solid var(--line)}
+.day .tt{font-family:var(--f-mono);font-size:.82rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.day .rp{color:var(--c1);font-weight:700}
+
+/* advice */
+.advice{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.advice li{display:flex;gap:10px;align-items:flex-start}
+.advice li svg{width:22px;height:22px;flex:none;margin-top:2px;color:var(--cat)}
+.scale{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;margin-top:14px}
+.scale div{border:2px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center;font-size:.7rem;font-weight:800;line-height:1.15}
+.scale div.on{transform:translateY(-4px) rotate(-3deg);box-shadow:2px 3px 0 var(--line)}
+.scale small{display:block;font-family:var(--f-mono);font-weight:500}
+
+/* facts */
+.fact{min-height:7.5em;display:grid;gap:8px;align-content:start}
+.fact .no{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.1em;color:var(--muted)}
+.fact .ft{font-family:var(--f-display);font-size:1.3rem;line-height:1.15}
+.fact p{margin:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:8px;border:2.5px solid var(--line);border-radius:14px;padding:8px 14px;font-weight:800;background:var(--paper);box-shadow:3px 3px 0 var(--line);transition:transform .12s}
+.btn:hover{transform:translate(-1px,-1px)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--line)}
+.btn.primary{background:var(--hibiscus);color:#fff}
+.btn.yellow{background:var(--sun);color:#14213d}
+.btn svg{width:18px;height:18px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.wiggle{animation:wig .5s}
+@keyframes wig{25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+
+/* notif */
+.field{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:2px dotted color-mix(in srgb,var(--line) 30%,transparent);flex-wrap:wrap}
+.field label{font-weight:700}
+.field small{display:block;color:var(--muted);font-weight:500;font-size:.82rem}
+select{border:2px solid var(--line);border-radius:10px;padding:6px 8px;background:var(--paper)}
+.switch{position:relative;width:58px;height:32px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border:2.5px solid var(--line);border-radius:999px;background:var(--soft);transition:.2s;pointer-events:none}
+.switch span:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--paper);border:2px solid var(--line);transition:.2s}
+.switch input:checked + span{background:var(--leaf)}
+.switch input:checked + span:after{left:29px}
+.switch input:focus-visible + span{outline:3px solid var(--hibiscus);outline-offset:2px}
+.status{font-size:.88rem;color:var(--muted);margin:12px 0 0}
+
+/* search panel */
+.search{display:grid;gap:10px}
+.search .in{display:flex;gap:8px}
+.search input{flex:1;min-width:0;border:2.5px solid var(--line);border-radius:14px;padding:8px 12px;background:var(--paper)}
+.results{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.results button{width:100%;text-align:left;border:2px solid var(--line);border-radius:12px;padding:8px 12px;background:var(--soft);font-weight:700}
+.results button small{font-weight:500;color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:14px;font-weight:700;max-width:calc(100% - 32px);z-index:9;box-shadow:3px 3px 0 var(--hibiscus)}
+.err{background:color-mix(in srgb,var(--hibiscus) 15%,var(--paper))}
+footer{font-size:.8rem;color:var(--muted);text-align:center;line-height:1.5}
+footer a{color:inherit}
+.skel{opacity:.55}
+@media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <svg width="46" height="46" viewBox="0 0 48 48" aria-hidden="true"><circle cx="17" cy="17" r="8" fill="var(--sun)" stroke="#14213d" stroke-width="2.5"/><path d="M13 38h22a8 8 0 0 0 0-16 11 11 0 0 0-21-2 7.5 7.5 0 0 0-1 18z" fill="#fff" stroke="#14213d" stroke-width="2.5" stroke-linejoin="round"/><circle cx="22" cy="30" r="1.6" fill="#14213d"/><circle cx="30" cy="30" r="1.6" fill="#14213d"/></svg>
+      <div><h1>IPU <span>Lah!</span></h1><small>Cuaca &amp; udara, cakap straight</small></div>
+    </div>
+    <div class="locbar">
+      <span class="chip" id="locChip"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg><span class="nm" id="locName">Cari lokasi…</span></span>
+      <button class="iconbtn" id="btnSearch" aria-label="Tukar lokasi" title="Tukar lokasi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/></svg></button>
+      <button class="iconbtn" id="btnRefresh" aria-label="Refresh data" title="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg></button>
+    </div>
+  </header>
+
+  <section class="card search" id="searchPanel" hidden>
+    <h2>Nak tengok tempat lain?</h2>
+    <form class="in" id="searchForm">
+      <input id="q" type="search" placeholder="Taip nama bandar… contoh: Ipoh" autocomplete="off" aria-label="Nama bandar">
+      <button class="btn yellow" type="submit">Cari</button>
+    </form>
+    <div class="row">
+      <button class="btn" id="btnGps" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>Guna lokasi semasa</button>
+    </div>
+    <ul class="results" id="results"></ul>
+  </section>
+
+  <!-- HERO -->
+  <section class="card hero" id="hero" aria-live="polite">
+    <div class="hero-grid">
+      <div>
+        <div class="gaugebox">
+          <svg id="gauge" viewBox="0 0 300 175" role="img" aria-label="Meter IPU"></svg>
+          <div class="gaugeval"><div class="num" id="ipuNum">--</div><div class="lbl">IPU anggaran</div></div>
+        </div>
+      </div>
+      <div class="mascotbox">
+        <div id="mascot" class="mascot" aria-hidden="true"></div>
+        <span class="pill" id="catPill">Loading… <em>sabar ah</em></span>
+      </div>
+    </div>
+    <div class="bubble" id="quote">Abang Awan tengah cari lokasi you. Kalau browser tanya, tekan "Allow" ya boss.</div>
+    <div class="meta" id="heroMeta"></div>
+  </section>
+
+  <!-- POLLUTANTS -->
+  <section class="card tilt-r">
+    <h2>Siapa punya pasal?</h2>
+    <p class="sub">IPU = sub-indeks paling tinggi antara 6 bahan pencemar. Yang ada tag merah tu lah culprit utama.</p>
+    <div class="pgrid" id="pols"></div>
+  </section>
+
+  <!-- IPU forecast -->
+  <section class="card">
+    <h2>IPU 24 jam akan datang</h2>
+    <p class="sub">Ramalan anggaran ikut model CAMS. Bar tinggi = udara makin teruk.</p>
+    <div class="chart" id="ipuChart"></div>
+    <div class="legend" id="ipuLegend"></div>
+  </section>
+
+  <!-- WEATHER -->
+  <section class="card tilt-l" id="wxCard">
+    <h2>Cuaca sekarang</h2>
+    <div class="wxnow">
+      <div class="big" id="wxIcon"></div>
+      <div><div class="temp" id="wxTemp">--<sup>°C</sup></div><div class="wxdesc" id="wxDesc">…</div></div>
+    </div>
+    <div class="stats" id="wxStats"></div>
+    <div class="quip" id="wxQuip">Tunggu kejap, tengah tanya langit…</div>
+  </section>
+
+  <section class="card">
+    <h2>Suhu &amp; peluang hujan, 24 jam</h2>
+    <p class="sub">Garisan = suhu (°C). Bar biru = peluang hujan (%).</p>
+    <div class="chart" id="wxChart"></div>
+  </section>
+
+  <section class="card tilt-r">
+    <h2>5 hari depan</h2>
+    <div class="days" id="days"></div>
+  </section>
+
+  <!-- ADVICE -->
+  <section class="card" id="adviceCard">
+    <h2>Apa patut buat?</h2>
+    <p class="sub" id="adviceSub">Nasihat kesihatan ikut kategori IPU.</p>
+    <ul class="advice" id="advice"></ul>
+    <div class="scale" id="scale"></div>
+  </section>
+
+  <!-- FACTS -->
+  <section class="card tilt-l">
+    <h2>Fakta Tak Sangka</h2>
+    <div class="fact" id="fact"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn yellow" id="factNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>Fakta lain</button>
+    </div>
+  </section>
+
+  <!-- NOTIFICATIONS -->
+  <section class="card" id="notifCard">
+    <h2>Notifikasi</h2>
+    <p class="sub">Abang Awan boleh bagitau bila udara jadi teruk atau hujan nak turun.</p>
+    <div class="field">
+      <label for="nOn">Hidupkan amaran<small>Perlu kebenaran browser</small></label>
+      <span class="switch"><input type="checkbox" id="nOn"><span></span></span>
+    </div>
+    <div class="field">
+      <label for="nThr">Amaran bila IPU lebih<small>Pilih tahap yang you kisah</small></label>
+      <select id="nThr">
+        <option value="51">50 (Sederhana)</option>
+        <option value="101" selected>100 (Tidak Sihat)</option>
+        <option value="201">200 (Sangat Tidak Sihat)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="nRain">Amaran hujan<small>Bila peluang hujan 70%+ dalam 2 jam</small></label>
+      <span class="switch"><input type="checkbox" id="nRain" checked><span></span></span>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" id="nTest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>Test notifikasi</button>
+      <button class="btn" id="btnInstall" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Install app</button>
+    </div>
+    <p class="status" id="nStatus">Notifikasi belum dihidupkan.</p>
+  </section>
+
+  <footer>
+    Data cuaca: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>. Kualiti udara: model Copernicus CAMS melalui Open-Meteo. Nama tempat: BigDataCloud.<br>
+    IPU di sini ialah <b>anggaran</b> dari data model, guna ambang Standard Kualiti Udara Ambien Malaysia 2020. Untuk bacaan rasmi stesen, rujuk <a href="https://eqms.doe.gov.my/APIMS/main" target="_blank" rel="noopener">APIMS, Jabatan Alam Sekitar</a>.
+  </footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,3200)}
+
+/* ---------- IPU categories (Malaysian DOE colour scheme) ---------- */
+const CATS=[
+ {max:50, ms:'Baik', en:'Good', c:'var(--c1)', fg:'#fff'},
+ {max:100,ms:'Sederhana', en:'Moderate', c:'var(--c2)', fg:'#fff'},
+ {max:200,ms:'Tidak Sihat', en:'Unhealthy', c:'var(--c3)', fg:'#14213d'},
+ {max:300,ms:'Sangat Tidak Sihat', en:'Very unhealthy', c:'var(--c4)', fg:'#14213d'},
+ {max:Infinity,ms:'Berbahaya', en:'Hazardous', c:'var(--c5)', fg:'#fff'}];
+const RANGES=[[0,50],[51,100],[101,200],[201,300],[301,500]];
+const catOf=v=>CATS.findIndex(c=>v<=c.max);
+
+/* Breakpoints: concentration -> sub-index. Index 100 = MAAQS 2020 limit. */
+const BP={
+ pm25:[[0,0],[15,50],[35,100],[150,200],[250,300],[500,500]],
+ pm10:[[0,0],[50,50],[100,100],[350,200],[420,300],[600,500]],
+ o3:[[0,0],[100,50],[180,100],[400,200],[800,300],[1200,500]],
+ co:[[0,0],[5,50],[10,100],[17,200],[34,300],[46,500]],
+ no2:[[0,0],[140,50],[280,100],[1130,200],[2260,300],[3750,500]],
+ so2:[[0,0],[125,50],[250,100],[800,200],[1600,300],[2620,500]]};
+function sub(key,c){
+  if(c==null||!isFinite(c))return null;
+  const b=BP[key];
+  for(let i=1;i<b.length;i++){ if(c<=b[i][0]){const[c0,i0]=b[i-1],[c1,i1]=b[i];return Math.round(i0+(c-c0)*(i1-i0)/(c1-c0));} }
+  const[c0,i0]=b[b.length-2],[c1,i1]=b[b.length-1];return Math.round(i1+(c-c1)*(i1-i0)/(c1-c0));
+}
+function mean(arr,end,n){let s=0,k=0;for(let i=Math.max(0,end-n+1);i<=end;i++){const v=arr?.[i];if(v!=null){s+=v;k++}}return k?s/k:null}
+function ipuAt(h,i){
+  const co=mean(h.carbon_monoxide,i,8);
+  const conc={pm25:mean(h.pm2_5,i,24),pm10:mean(h.pm10,i,24),o3:h.ozone?.[i],co:co==null?null:co/1000,no2:h.nitrogen_dioxide?.[i],so2:h.sulphur_dioxide?.[i]};
+  const subs={};let max=-1,dom='pm25';
+  for(const k in conc){subs[k]=sub(k,conc[k]);if(subs[k]!=null&&subs[k]>max){max=subs[k];dom=k}}
+  return {ipu:Math.max(0,max),dom,subs,conc};
+}
+
+const POL={
+ pm25:{nm:'PM2.5',unit:'µg/m³',avg:'purata 24j',d:'Habuk super halus, 2.5 mikron ke bawah. Boleh masuk dalam paru-paru sampai ke saluran darah.'},
+ pm10:{nm:'PM10',unit:'µg/m³',avg:'purata 24j',d:'Habuk kasar sikit: debu jalan, tapak binaan, asap pembakaran.'},
+ o3:{nm:'Ozon',unit:'µg/m³',avg:'1 jam',d:'Ozon aras bumi. Cahaya matahari "masak" asap ekzos jadi ozon, sebab tu tinggi waktu petang.'},
+ no2:{nm:'NO₂',unit:'µg/m³',avg:'1 jam',d:'Nitrogen dioksida, kebanyakan dari ekzos kenderaan dan kilang. Jalan jammed, NO₂ naik.'},
+ so2:{nm:'SO₂',unit:'µg/m³',avg:'1 jam',d:'Sulfur dioksida dari bahan api bersulfur: kilang, loji janakuasa, kapal.'},
+ co:{nm:'CO',unit:'mg/m³',avg:'purata 8j',d:'Karbon monoksida. Tak berbau, tak berwarna, datang dari ekzos dan pembakaran tak lengkap.'}};
+
+/* ---------- Manglish lines ---------- */
+const LINES=[
+ ['Fuyoh, udara bersih gila! Go jogging lah, jangan malas.','Langit clear macam hati orang baru dapat gaji.','Sedap bernafas today, boss. Tarik nafas dalam-dalam, free of charge.','Udara steady bom. Bawak budak-budak main kat taman pun okay.'],
+ ['Okay-okay lah. Not bad, not best, macam teh tarik kurang manis.','Boleh keluar, tapi yang ada asma tu slow-slow sikit ah.','Udara so-so je. Jangan bakar sampah pulak, nanti jadi worse.'],
+ ['Alamak, jerebu datang lagi! Pakai mask lah, jangan degil.','Jangan buat marathon kat luar, nanti paru-paru you complain.','Udara dah tak sihat, boss. Anak kecik dengan atuk nenek, duduk dalam dulu.'],
+ ['Aiyo, ini serious punya level. Tutup tingkap, duduk dalam rumah.','Sangat tak sihat lah! Keluar kalau betul-betul perlu je, pakai N95.','Abang Awan pun dah pening ni. Jangan exercise kat luar, okay?'],
+ ['Bahaya level boss! Stay indoor, ikut arahan pihak berkuasa.','Ini bukan main-main dah. Duduk dalam, tutup semua tingkap, check jiran warga emas.']];
+
+const ADVICE=[
+ ['Tiada langkah berjaga-jaga khas. Aktiviti luar macam biasa.','Masa terbaik untuk buka tingkap, bagi rumah bernafas.'],
+ ['Orang ramai boleh aktiviti luar macam biasa.','Kumpulan sensitif (asma, penyakit jantung, warga emas, kanak-kanak) kurangkan aktiviti lasak yang lama di luar.'],
+ ['Kurangkan aktiviti luar, terutama yang lasak.','Kanak-kanak, warga emas, ibu mengandung dan pesakit asma atau jantung elak aktiviti luar.','Kalau terpaksa keluar, pakai pelitup muka, lebih baik jenis N95.','Minum air secukupnya.'],
+ ['Elak aktiviti luar. Duduk dalam bangunan, tutup pintu dan tingkap.','Guna penapis udara kalau ada.','Pakai N95 kalau terpaksa keluar.','Dapatkan rawatan kalau sesak nafas, batuk teruk atau sakit dada.'],
+ ['Kekal di dalam bangunan.','Ikut arahan Majlis Keselamatan Negara dan pihak berkuasa tempatan.','Pastikan ubat-ubatan (inhaler dan lain-lain) mencukupi.','Jenguk jiran warga emas atau yang tinggal seorang.']];
+
+const FACTS=[
+ ['IPU tu sebenarnya "siapa paling teruk"','IPU Malaysia tak campur semua pencemar jadi satu purata. Setiap pencemar dapat sub-indeks sendiri, dan nombor yang paling tinggi itulah jadi IPU.'],
+ ['Rambut you lagi tebal 20 kali','Sehelai rambut manusia lebih kurang 50 hingga 70 mikron. PM2.5 cuma 2.5 mikron, jadi 20 hingga 30 kali lagi halus. Sebab tu hidung tak boleh tapis.'],
+ ['Kuching, September 1997','Masa jerebu 1997, IPU di Kuching pernah mencecah sekitar 839. Itu antara bacaan paling tinggi pernah direkod di Malaysia.'],
+ ['Muar, Jun 2013','Jerebu 2013 bawa IPU di Muar ke sekitar 746, dan darurat jerebu diisytiharkan di Muar dan Ledang.'],
+ ['Lebih 500 = darurat','Bila IPU lebih 500, kerajaan boleh isytihar darurat jerebu untuk kawasan terlibat. Sekolah, pejabat dan aktiviti luar boleh diarah tutup.'],
+ ['Tanah gambut tak padam-padam','Kebakaran tanah gambut boleh membara bawah tanah berminggu-minggu. Asapnya tebal, dan inilah punca utama jerebu rentas sempadan.'],
+ ['Musim jerebu ada musimnya','Monsun Barat Daya (lebih kurang Mei hingga September) cuacanya lebih kering dan angin boleh bawa asap dari Sumatera dan Kalimantan. Itu sebab jerebu selalu muncul pertengahan tahun.'],
+ ['Monsun Timur Laut','Dari November hingga Mac, monsun Timur Laut bawa hujan lebat ke Pantai Timur. Banjir Kelantan, Terengganu dan Pahang biasa berlaku masa ni.'],
+ ['Hujan = mesin basuh udara','Titisan hujan tangkap habuk dan gas dalam udara, proses yang dipanggil pemendapan basah. Sebab tu lepas hujan, udara rasa fresh.'],
+ ['Ozon: baik di atas, jahat di bawah','Lapisan ozon di stratosfera lindungi kita dari UV. Tapi ozon dekat tanah merengsakan paru-paru dan kebiasaannya paling tinggi waktu petang.'],
+ ['WHO lagi strict','Garis panduan WHO 2021 untuk PM2.5 ialah 15 µg/m³ purata 24 jam. Standard Malaysia 2020 pula 35 µg/m³.'],
+ ['UV kat Malaysia memang ganas','Sebab kita dekat khatulistiwa, indeks UV tengah hari selalu sampai 11 ke atas, kategori "ekstrem". Sunblock bukan untuk gaya je.'],
+ ['Rekod paling panas','Suhu tertinggi rasmi Malaysia ialah 40.1°C di Chuping, Perlis, pada April 1998.'],
+ ['Lembap macam sauna','Kelembapan relatif di Malaysia selalunya 70% hingga 90%. Sebab tu 33°C kat sini rasa lagi panas dari 33°C di tempat kering.'],
+ ['CO: pembunuh senyap','Karbon monoksida tak ada bau dan warna. Jangan hidupkan enjin kereta dalam garaj tertutup.'],
+ ['Kenapa Abang Awan pakai mask?','Pelitup N95 boleh tapis sekurang-kurangnya 95% zarah sekecil 0.3 mikron kalau dipakai betul-betul rapat. Mask kain biasa jauh kurang berkesan untuk jerebu.']];
+
+/* ---------- SVG bits ---------- */
+const INK='#14213d';
+function wxType(c){
+  if(c===0)return 'clear'; if(c===1||c===2)return 'partly'; if(c===3)return 'cloudy';
+  if(c===45||c===48)return 'fog'; if(c>=51&&c<=57)return 'drizzle';
+  if((c>=61&&c<=67)||(c>=80&&c<=82))return 'rain'; if(c>=95)return 'storm';
+  if((c>=71&&c<=77)||c===85||c===86)return 'snow'; return 'cloudy';
+}
+const WXMS={clear:'Cerah',partly:'Separa mendung',cloudy:'Mendung',fog:'Berkabus',drizzle:'Gerimis',rain:'Hujan',storm:'Ribut petir',snow:'Salji? Kat sini?'};
+function sunG(cx,cy,r){let s='';for(let k=0;k<8;k++){const a=k*Math.PI/4,x1=cx+Math.cos(a)*(r+3),y1=cy+Math.sin(a)*(r+3),x2=cx+Math.cos(a)*(r+7),y2=cy+Math.sin(a)*(r+7);s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/>`}
+  return s+`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffcf3f" stroke="${INK}" stroke-width="2.4"/>`}
+function moonG(cx,cy,r){return `<path d="M${cx+r*.35} ${cy-r} a${r} ${r} 0 1 0 ${r*.65} ${r*1.55} a${r*.85} ${r*.85} 0 0 1 -${r*.65} -${r*1.55}z" fill="#ffe9a8" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>`}
+const cloudG=(dx=0,dy=0,fill='#fff')=>`<path transform="translate(${dx} ${dy})" d="M13 36h23a8 8 0 0 0 0-16 11 11 0 0 0-21-2 7.5 7.5 0 0 0-2 18z" fill="${fill}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>`;
+function wxIcon(code,day=1){
+  const t=wxType(code);let g='';
+  if(t==='clear')g=day?sunG(24,24,9):moonG(22,24,11);
+  else if(t==='partly')g=(day?sunG(16,15,6.5):moonG(15,14,8))+cloudG(2,4);
+  else if(t==='cloudy')g=cloudG(-4,-4,'#dfe6f0')+cloudG(3,4);
+  else if(t==='fog')g=cloudG(0,-4)+'<path d="M8 38h28M14 43h26" stroke="'+INK+'" stroke-width="2.4" stroke-linecap="round"/>';
+  else if(t==='drizzle')g=cloudG(0,-4)+'<path d="M17 38l-1 3M25 38l-1 3M33 38l-1 3" stroke="#2f6fde" stroke-width="2.6" stroke-linecap="round"/>';
+  else if(t==='rain')g=cloudG(0,-4)+'<path d="M16 37l-2 6M24 37l-2 6M32 37l-2 6" stroke="#2f6fde" stroke-width="2.8" stroke-linecap="round"/>';
+  else if(t==='storm')g=cloudG(0,-5)+'<path d="M25 30l-6 9h5l-3 8 9-11h-5l3-6z" fill="#ffcf3f" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"/><path d="M14 36l-2 5M35 36l-2 5" stroke="#2f6fde" stroke-width="2.6" stroke-linecap="round"/>';
+  else g=cloudG(0,-4)+'<g fill="#9fc4ff" stroke="'+INK+'" stroke-width="1.2"><circle cx="17" cy="40" r="2"/><circle cx="25" cy="43" r="2"/><circle cx="33" cy="40" r="2"/></g>';
+  return `<svg viewBox="0 0 48 48" aria-hidden="true">${g}</svg>`;
+}
+const UI={
+ temp:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
+ drop:'<path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z"/>',
+ wind:'<path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3M3 12h8"/>',
+ uv:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ umbrella:'<path d="M3 12a9 9 0 0 1 18 0z"/><path d="M12 12v7a2 2 0 0 1-4 0"/>',
+ sunrise:'<path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 4v5M9 7l3-3 3 3"/>',
+ sunset:'<path d="M4 18h16M7 18a5 5 0 0 1 10 0M12 4v5M9 6l3 3 3-3"/>',
+ cloud:'<path d="M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 18z"/>',
+ check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.6 2.6L16 9.5"/>'};
+const ui=n=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${UI[n]}</svg>`;
+
+/* Mascot: Abang Awan */
+function mascot(level){
+  const tints=['#ffffff','#eef0f2','#ddd8cb','#c7bba7','#a59684'];
+  const fill=level<0?'#ffffff':tints[level];
+  const C=[[58,98,36],[100,72,46],[146,94,38],[100,112,38],[76,116,28],[126,116,28]];
+  const outline=C.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${INK}" stroke="${INK}" stroke-width="10"/>`).join('');
+  const body=C.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="${fill}"/>`).join('');
+  const dotEyes=(dy=0)=>`<circle cx="84" cy="${92+dy}" r="5.5" fill="${INK}"/><circle cx="116" cy="${92+dy}" r="5.5" fill="${INK}"/><circle cx="86" cy="${90+dy}" r="1.8" fill="#fff"/><circle cx="118" cy="${90+dy}" r="1.8" fill="#fff"/>`;
+  const cheeks=`<ellipse cx="70" cy="106" rx="8" ry="5" fill="#ff9aa6" opacity=".8"/><ellipse cx="130" cy="106" rx="8" ry="5" fill="#ff9aa6" opacity=".8"/>`;
+  const mask=(c='#e9f6ff')=>`<path d="M60 100l18 4M140 100l-18 4" stroke="${INK}" stroke-width="2.5"/><rect x="77" y="98" width="46" height="26" rx="10" fill="${c}" stroke="${INK}" stroke-width="3"/><path d="M82 107h36M82 115h36" stroke="${INK}" stroke-width="1.8" opacity=".5"/>`;
+  let face='',extra='';
+  if(level<0){face=dotEyes(-4)+`<ellipse cx="100" cy="110" rx="6" ry="7" fill="${INK}"/>`;extra=`<g fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round"><path d="M158 40q8-8 14 0"/><circle cx="170" cy="28" r="2" fill="${INK}"/></g>`}
+  else if(level===0){face=`<path d="M76 93q8-11 16 0M108 93q8-11 16 0" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/><path d="M84 103q16 20 32 0z" fill="${INK}"/><path d="M92 110q8 6 16 0" fill="#ff7e8c"/>`+cheeks;
+    extra=sunG(168,34,13)}
+  else if(level===1){face=dotEyes()+`<path d="M86 110q7-5 14 0t14 0" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>`}
+  else if(level===2){face=`<path d="M76 82l14 4M124 82l-14 4" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`+dotEyes(-2)+mask()}
+  else if(level===3){face=`<path d="M77 85l12 6-12 6M123 85l-12 6 12 6" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`+mask('#fff6d6');
+    extra=`<path d="M150 58s8 9 8 14a8 8 0 0 1-16 0c0-5 8-14 8-14z" fill="#8ec5ff" stroke="${INK}" stroke-width="2.5"/>`}
+  else {face=`<path d="M78 84l12 12M90 84l-12 12M110 84l12 12M122 84l-12 12" stroke="${INK}" stroke-width="4" stroke-linecap="round"/><rect x="80" y="100" width="40" height="22" rx="9" fill="#5b6475" stroke="${INK}" stroke-width="3"/><circle cx="100" cy="128" r="11" fill="#8a93a5" stroke="${INK}" stroke-width="3"/><circle cx="100" cy="128" r="4" fill="${INK}"/>`;
+    extra=`<g fill="#8b7f73" stroke="${INK}" stroke-width="2"><circle cx="30" cy="40" r="9"/><circle cx="44" cy="30" r="7"/><circle cx="170" cy="46" r="8"/></g>`}
+  return `<svg viewBox="0 0 200 160">${extra}${outline}${body}${face}</svg>`;
+}
+
+/* Gauge */
+const valFrac=v=>{v=Math.max(0,Math.min(500,v));const bands=[[0,50],[50,100],[100,200],[200,300],[300,500]];for(let k=0;k<5;k++){const[a,b]=bands[k];if(v<=b)return (k+(v-a)/(b-a))/5}return 1};
+function arcPath(cx,cy,r,f0,f1){const a0=Math.PI*(1+f0),a1=Math.PI*(1+f1);return `M${(cx+r*Math.cos(a0)).toFixed(2)} ${(cy+r*Math.sin(a0)).toFixed(2)} A${r} ${r} 0 0 1 ${(cx+r*Math.cos(a1)).toFixed(2)} ${(cy+r*Math.sin(a1)).toFixed(2)}`}
+function drawGauge(v){
+  const cx=150,cy=150,r=118;let s='';
+  s+=`<path d="${arcPath(cx,cy,r,0,1)}" fill="none" stroke="var(--line)" stroke-width="34" stroke-linecap="round"/>`;
+  for(let k=0;k<5;k++)s+=`<path d="${arcPath(cx,cy,r,k/5+.004,(k+1)/5-.004)}" fill="none" stroke="${CATS[k].c}" stroke-width="27" ${k===0||k===4?'stroke-linecap="round"':''}/>`;
+  ['0','50','100','200','300','500'].forEach((t,i)=>{const a=Math.PI*(1+i/5),x=cx+(r-30)*Math.cos(a),y=cy+(r-30)*Math.sin(a);s+=`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" fill="var(--muted)">${t}</text>`});
+  if(v!=null){const a=Math.PI*(1+valFrac(v));const x=cx+(r)*Math.cos(a),y=cy+(r)*Math.sin(a);
+    s+=`<g class="needle"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="var(--paper)" stroke="var(--line)" stroke-width="4"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="var(--line)"/></g>`}
+  $('#gauge').innerHTML=s;
+}
+
+/* ---------- state ---------- */
+let LOC=store.get('ipulah.loc',null); // {lat,lon,name}
+let DATA=null, lastFetch=0, factIdx=Math.floor(Math.random()*FACTS.length);
+const settings=Object.assign({on:false,thr:101,rain:true},store.get('ipulah.notif',{}));
+
+/* ---------- location ---------- */
+async function reverseName(lat,lon){
+  try{const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`);const j=await r.json();
+    const a=j.city||j.locality||j.principalSubdivision||'';const b=j.principalSubdivision&&j.principalSubdivision!==a?j.principalSubdivision:j.countryName;return [a,b].filter(Boolean).join(', ')||`${lat.toFixed(2)}, ${lon.toFixed(2)}`}
+  catch(e){return `${lat.toFixed(2)}, ${lon.toFixed(2)}`}
+}
+function gps(){return new Promise((res,rej)=>{if(!('geolocation' in navigator))return rej(new Error('nogeo'));navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lon:p.coords.longitude}),rej,{enableHighAccuracy:false,timeout:12000,maximumAge:10*60*1000})})}
+async function ipLoc(){const r=await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=en');const j=await r.json();if(j.latitude==null)throw new Error('noip');return {lat:j.latitude,lon:j.longitude,name:[j.city||j.locality,j.principalSubdivision].filter(Boolean).join(', ')+' (anggaran IP)'}}
+async function detect(manual){
+  $('#locName').textContent='Detecting…';
+  try{const p=await gps();const name=await reverseName(p.lat,p.lon);setLoc({...p,name,auto:true})}
+  catch(e){
+    try{const p=await ipLoc();setLoc({...p,auto:true});toast(manual?'GPS tak dapat, guna anggaran lokasi dari IP.':'Lokasi tepat tak dibenarkan, guna anggaran dari IP.')}
+    catch(e2){if(LOC){setLoc(LOC)}else{showError('Tak dapat cari lokasi you. Tekan butang cari dan taip nama bandar.')}}
+  }
+}
+function setLoc(l){LOC={lat:+l.lat,lon:+l.lon,name:l.name,auto:!!l.auto};store.set('ipulah.loc',LOC);$('#locName').textContent=LOC.name;load();syncSW()}
+
+/* ---------- data ---------- */
+async function load(){
+  if(!LOC)return;
+  $('#btnRefresh').classList.add('wiggle');setTimeout(()=>$('#btnRefresh').classList.remove('wiggle'),500);
+  const {lat,lon}=LOC;
+  const aqU=`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${lat}&longitude=${lon}&hourly=pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,sulphur_dioxide,ozone&current=pm2_5&timezone=auto&past_days=1&forecast_days=2`;
+  const wxU=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,uv_index&hourly=temperature_2m,precipitation_probability,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset&timezone=auto&forecast_days=6`;
+  try{
+    const [aq,wx]=await Promise.all([fetch(aqU).then(r=>{if(!r.ok)throw new Error('aq '+r.status);return r.json()}),fetch(wxU).then(r=>{if(!r.ok)throw new Error('wx '+r.status);return r.json()})]);
+    DATA={aq,wx};lastFetch=Date.now();store.set('ipulah.cache',{t:lastFetch,loc:LOC,aq,wx});render();checkAlerts();
+  }catch(e){
+    const c=store.get('ipulah.cache',null);
+    if(c&&c.loc&&Math.abs(c.loc.lat-lat)<.05&&Math.abs(c.loc.lon-lon)<.05){DATA={aq:c.aq,wx:c.wx};lastFetch=c.t;render();toast('Offline. Tunjuk data terakhir yang disimpan.')}
+    else showError('Server cuaca tak jawab. Check internet, lepas tu tekan refresh.');
+  }
+}
+const hourKey=t=>t.slice(0,13)+':00';
+function idxNow(times,cur){const k=hourKey(cur);let i=times.indexOf(k);if(i<0){i=times.findIndex(t=>t>k)-1;if(i<0)i=0}return i}
+
+function showError(msg){$('#quote').textContent=msg;$('#hero').classList.add('err');$('#catPill').innerHTML='Alamak <em>ada masalah</em>';$('#mascot').innerHTML=mascot(-1)}
+
+/* ---------- render ---------- */
+function render(){
+  const {aq,wx}=DATA;$('#hero').classList.remove('err');
+  const h=aq.hourly;const ai=idxNow(h.time,aq.current?.time||wx.current.time);
+  const now=ipuAt(h,ai);const lvl=catOf(now.ipu);const cat=CATS[lvl];
+  const root=document.documentElement;root.style.setProperty('--cat',cat.c);root.style.setProperty('--catfg',cat.fg);
+  $('#ipuNum').textContent=now.ipu;drawGauge(now.ipu);
+  $('#mascot').innerHTML=mascot(lvl);
+  $('#catPill').innerHTML=`${esc(cat.ms)} <em>${esc(cat.en)}</em>`;
+  $('#quote').textContent=pick(LINES[lvl]);
+  const upd=new Date(lastFetch);
+  $('#heroMeta').innerHTML=`<span>Punca utama: <b>${POL[now.dom].nm}</b></span><span>Dikemas kini: <b>${upd.toLocaleTimeString('ms-MY',{hour:'numeric',minute:'2-digit'})}</b></span><span>${LOC.lat.toFixed(2)}°, ${LOC.lon.toFixed(2)}°</span>`;
+
+  // pollutants
+  $('#pols').innerHTML=Object.keys(POL).map(k=>{const p=POL[k],si=now.subs[k],c=now.conc[k];const l=si==null?0:catOf(si);
+    const val=c==null?'n/a':(k==='co'?c.toFixed(2):Math.round(c));const w=si==null?0:Math.min(100,valFrac(si)*100);
+    return `<div class="pol ${k===now.dom?'dom':''}" style="--pc:${si==null?'var(--muted)':CATS[l].c}">${k===now.dom?'<span class="tag">Culprit</span>':''}
+      <div class="hd"><span class="nm">${p.nm}</span><span class="val"><b>${val}</b> ${p.unit}<br>${p.avg}</span></div>
+      <div class="bar"><i style="width:${w}%"></i></div>
+      <div class="si"><span>Sub-indeks ${si??'–'}</span><span>${si==null?'':CATS[l].ms}</span></div>
+      <p>${p.d}</p></div>`}).join('');
+
+  // ipu forecast chart
+  const fc=[];for(let i=ai;i<Math.min(h.time.length,ai+24);i++)fc.push({t:h.time[i],v:ipuAt(h,i).ipu});
+  drawBars(fc);
+  $('#ipuLegend').innerHTML=CATS.map((c,i)=>`<span><i style="background:${c.c}"></i>${RANGES[i][0]}–${i===4?'500+':RANGES[i][1]} ${c.ms}</span>`).join('');
+
+  // weather now
+  const cw=wx.current;const t=wxType(cw.weather_code);
+  $('#wxIcon').innerHTML=wxIcon(cw.weather_code,cw.is_day);
+  $('#wxTemp').innerHTML=`${Math.round(cw.temperature_2m)}<sup>°C</sup>`;
+  $('#wxDesc').textContent=`${WXMS[t]} · rasa macam ${Math.round(cw.apparent_temperature)}°C`;
+  const wi=idxNow(wx.hourly.time,cw.time);const d0=wx.daily;
+  const rain2=Math.max(...wx.hourly.precipitation_probability.slice(wi,wi+3).map(x=>x??0));
+  const uv=cw.uv_index??d0.uv_index_max[0];
+  const stats=[['temp','Rasa macam',Math.round(cw.apparent_temperature)+'°C'],['drop','Kelembapan',cw.relative_humidity_2m+'%'],['wind','Angin',Math.round(cw.wind_speed_10m)+' km/j '+compass(cw.wind_direction_10m)],['umbrella','Hujan 2 jam',rain2+'%'],['uv','UV sekarang / max',(uv!=null?Math.round(uv):'–')+' / '+Math.round(d0.uv_index_max[0]??0)],['cloud','Litupan awan',cw.cloud_cover+'%'],['sunrise','Matahari terbit',d0.sunrise[0].slice(11,16)],['sunset','Matahari terbenam',d0.sunset[0].slice(11,16)]];
+  $('#wxStats').innerHTML=stats.map(([i,k,v])=>`<div class="stat">${ui(i)}<div><div class="k">${k}</div><div class="v">${esc(v)}</div></div></div>`).join('');
+  $('#wxQuip').textContent=wxQuip(cw,t,rain2,d0.uv_index_max[0]);
+
+  drawTemp(wx.hourly,wi);
+  // days
+  const tmin=Math.min(...d0.temperature_2m_min.slice(1,6)),tmax=Math.max(...d0.temperature_2m_max.slice(1,6));const span=Math.max(1,tmax-tmin);
+  const DN=['Ahd','Isn','Sel','Rab','Kha','Jum','Sab'];
+  $('#days').innerHTML=d0.time.slice(1,6).map((d,j)=>{const i=j+1;const dt=new Date(d+'T12:00:00');const lo=d0.temperature_2m_min[i],hi=d0.temperature_2m_max[i];
+    return `<div class="day"><span class="dn">${DN[dt.getDay()]}</span>${wxIcon(d0.weather_code[i],1)}<span class="range" aria-hidden="true"><i style="left:${((lo-tmin)/span*100).toFixed(1)}%;right:${((tmax-hi)/span*100).toFixed(1)}%"></i></span><span class="tt">${Math.round(lo)}°/${Math.round(hi)}° <span class="rp">${d0.precipitation_probability_max[i]??0}%</span></span></div>`}).join('');
+
+  // advice
+  $('#adviceSub').textContent=`Tahap sekarang: ${cat.ms} (IPU ${now.ipu}).`;
+  $('#advice').innerHTML=ADVICE[lvl].map(a=>`<li>${ui('check')}<span>${esc(a)}</span></li>`).join('');
+  $('#scale').innerHTML=CATS.map((c,i)=>`<div class="${i===lvl?'on':''}" style="background:${c.c};color:${c.fg}">${c.ms}<small>${RANGES[i][0]}–${i===4?'500+':RANGES[i][1]}</small></div>`).join('');
+}
+function compass(d){return ['U','TL','T','TG','S','BD','B','BL'][Math.round(((d%360)/45))%8]}
+function wxQuip(cw,t,rain2,uvmax){
+  if(t==='storm')return 'Ribut petir on the way! Jangan lepak bawah pokok atau tengah padang, bahaya tau.';
+  if(t==='rain'||t==='drizzle')return pick(['Hujan turun, bawak payung. Kain kat ampaian tu, angkat cepat!','Jalan licin, bawak kereta slow-slow. Jem confirm panjang.']);
+  if(rain2>=70)return `Peluang hujan ${rain2}% dalam 2 jam. Payung masuk beg sekarang, jangan menyesal nanti.`;
+  if(cw.apparent_temperature>=38)return `Rasa macam ${Math.round(cw.apparent_temperature)}°C! Panas tahap ketuhar. Minum air kosong, bukan teh ais je.`;
+  if(cw.temperature_2m>=33)return 'Panas terik, boss! Cari tempat teduh, sunblock jangan lupa.';
+  if(!cw.is_day)return t==='clear'?'Malam cerah, bintang pun nampak. Sesuai lepak mamak.':'Malam-malam ni rehat lah. Esok kita hadap dunia lagi.';
+  if(uvmax>=11)return `UV hari ni sampai ${Math.round(uvmax)}, kategori ekstrem. Topi, sunblock, payung, semua bawak.`;
+  if(t==='fog')return 'Berkabus pagi ni. Pasang lampu kereta, jangan main redah.';
+  return pick(['Cuaca okay je. Carry on, life goes on.','Langit steady. Hari yang baik untuk siapkan kerja tertangguh.']);
+}
+
+/* charts */
+function drawBars(fc){
+  const W=340,H=150,L=30,R=8,T=12,B=24;const n=fc.length||1;const bw=(W-L-R)/n;
+  const vmax=Math.max(100,Math.ceil(Math.max(...fc.map(f=>f.v))/50)*50);const y=v=>T+(H-T-B)*(1-v/vmax);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ramalan IPU 24 jam">`;
+  Array.from({length:vmax/50+1},(_,k)=>k*50).filter(v=>vmax<=200||v%100===0).forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--muted)" stroke-opacity=".25" stroke-dasharray="3 3"/><text x="${L-5}" y="${y(v)+3}" text-anchor="end" font-size="9" font-family="DM Mono,monospace" fill="var(--muted)">${v}</text>`});
+  if(vmax>=100)s+=`<line x1="${L}" x2="${W-R}" y1="${y(100)}" y2="${y(100)}" stroke="var(--hibiscus)" stroke-width="1.5"/><text x="${L+4}" y="${y(100)-4}" font-size="9" font-weight="700" font-family="DM Mono,monospace" fill="var(--hibiscus)" stroke="var(--paper)" stroke-width="3" paint-order="stroke">had sihat 100</text>`;
+  fc.forEach((f,i)=>{const x=L+i*bw+1.5,h=Math.max(2,y(0)-y(f.v));s+=`<rect x="${x.toFixed(1)}" y="${(y(0)-h).toFixed(1)}" width="${(bw-3).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${CATS[catOf(f.v)].c}" stroke="var(--line)" stroke-width="1.2"><title>${f.t.slice(11,16)}: IPU ${f.v}</title></rect>`;
+    if(i%6===0)s+=`<text x="${x+bw/2}" y="${H-8}" text-anchor="middle" font-size="9" font-family="DM Mono,monospace" fill="var(--muted)">${f.t.slice(11,16)}</text>`});
+  $('#ipuChart').innerHTML=s+'</svg>';
+}
+function drawTemp(hh,wi){
+  const T0=hh.temperature_2m.slice(wi,wi+24),P=hh.precipitation_probability.slice(wi,wi+24).map(x=>x??0),tm=hh.time.slice(wi,wi+24);
+  const W=340,H=160,L=30,R=30,Tp=16,B=24,n=T0.length;const bw=(W-L-R)/n;
+  const lo=Math.floor(Math.min(...T0))-1,hi=Math.ceil(Math.max(...T0))+1;const y=v=>Tp+(H-Tp-B)*(1-(v-lo)/(hi-lo));const yp=p=>Tp+(H-Tp-B)*(1-p/100);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Suhu dan peluang hujan 24 jam">`;
+  [lo,Math.round((lo+hi)/2),hi].forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--muted)" stroke-opacity=".25" stroke-dasharray="3 3"/><text x="${L-5}" y="${y(v)+3}" text-anchor="end" font-size="9" font-family="DM Mono,monospace" fill="var(--muted)">${v}°</text>`});
+  [0,50,100].forEach(p=>s+=`<text x="${W-R+5}" y="${yp(p)+3}" font-size="9" font-family="DM Mono,monospace" fill="var(--c1)">${p}%</text>`);
+  P.forEach((p,i)=>{const h=yp(0)-yp(p);if(h>0)s+=`<rect x="${(L+i*bw+1.5).toFixed(1)}" y="${yp(p).toFixed(1)}" width="${(bw-3).toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="var(--c1)" fill-opacity=".35"><title>${tm[i].slice(11,16)}: ${p}% hujan</title></rect>`});
+  const pts=T0.map((v,i)=>`${(L+i*bw+bw/2).toFixed(1)},${y(v).toFixed(1)}`);
+  s+=`<polygon points="${L+bw/2},${y(lo)} ${pts.join(' ')} ${(L+(n-1)*bw+bw/2).toFixed(1)},${y(lo)}" fill="var(--sun)" fill-opacity=".35"/>`;
+  s+=`<polyline points="${pts.join(' ')}" fill="none" stroke="var(--hibiscus)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const iMax=T0.indexOf(Math.max(...T0));s+=`<circle cx="${L+iMax*bw+bw/2}" cy="${y(T0[iMax])}" r="4.5" fill="var(--hibiscus)" stroke="var(--line)" stroke-width="1.5"/><text x="${L+iMax*bw+bw/2}" y="${y(T0[iMax])-8}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink)">${Math.round(T0[iMax])}°</text>`;
+  tm.forEach((t,i)=>{if(i%6===0)s+=`<text x="${L+i*bw+bw/2}" y="${H-8}" text-anchor="middle" font-size="9" font-family="DM Mono,monospace" fill="var(--muted)">${t.slice(11,16)}</text>`});
+  $('#wxChart').innerHTML=s+'</svg>';
+}
+
+/* facts */
+function showFact(){const [t,b]=FACTS[factIdx];$('#fact').innerHTML=`<span class="no">FAKTA ${String(factIdx+1).padStart(2,'0')} / ${FACTS.length}</span><span class="ft">${esc(t)}</span><p>${esc(b)}</p>`}
+$('#factNext').onclick=e=>{factIdx=(factIdx+1)%FACTS.length;showFact();const b=e.currentTarget;b.classList.add('wiggle');setTimeout(()=>b.classList.remove('wiggle'),500)};
+
+/* ---------- notifications ---------- */
+let SWREG=null;
+async function initSW(){
+  if(!('serviceWorker' in navigator))return;
+  try{SWREG=await navigator.serviceWorker.register('sw.js');await navigator.serviceWorker.ready;SWREG=await navigator.serviceWorker.getRegistration()||SWREG;syncSW()}catch(e){SWREG=null}
+}
+function syncSW(){
+  if(!SWREG||!LOC)return;const w=SWREG.active||navigator.serviceWorker.controller;
+  w&&w.postMessage({type:'config',cfg:{...settings,lat:LOC.lat,lon:LOC.lon,name:LOC.name}});
+}
+async function notify(title,body,tag){
+  if(!('Notification' in window)||Notification.permission!=='granted')return false;
+  const opt={body,tag,icon:'icon-192.png',badge:'icon-192.png',renotify:true};
+  try{if(SWREG){await SWREG.showNotification(title,opt);return true}}catch(e){}
+  try{new Notification(title,opt);return true}catch(e){return false}
+}
+async function enableNotif(){
+  if(!('Notification' in window)){status('Browser ni tak support notifikasi. Cuba Chrome atau Safari terkini, dan install app ke home screen.');return false}
+  let p=Notification.permission;if(p==='default')p=await Notification.requestPermission();
+  if(p!=='granted'){status('Kebenaran notifikasi ditolak. Buka setting browser untuk laman ni dan benarkan Notifications.');return false}
+  if(SWREG&&'periodicSync' in SWREG){try{const st=await navigator.permissions.query({name:'periodic-background-sync'});if(st.state==='granted')await SWREG.periodicSync.register('ipu-check',{minInterval:60*60*1000})}catch(e){}}
+  return true;
+}
+function status(m){$('#nStatus').textContent=m}
+async function refreshStatus(){
+  if(!settings.on){status('Notifikasi belum dihidupkan.');return}
+  let bg=false;try{if(SWREG&&'periodicSync' in SWREG){const tags=await SWREG.periodicSync.getTags();bg=tags.includes('ipu-check')}}catch(e){}
+  status(`Aktif. Amaran bila IPU ${settings.thr-1}+${settings.rain?' dan bila hujan nak turun':''}. `+(bg?'Semakan latar belakang dah hidup (lebih kurang sejam sekali).':'App check setiap 30 minit bila dibuka. Untuk amaran walaupun app tutup, install ke home screen (Chrome/Android).'));
+}
+function saveSettings(){store.set('ipulah.notif',settings);syncSW();refreshStatus()}
+$('#nOn').checked=settings.on;$('#nThr').value=String(settings.thr);$('#nRain').checked=settings.rain;
+$('#nOn').onchange=async e=>{if(e.target.checked){const ok=await enableNotif();settings.on=ok;e.target.checked=ok;if(ok){toast('Notifikasi on! Abang Awan standby.');checkAlerts(true)}}else settings.on=false;saveSettings()};
+$('#nThr').onchange=e=>{settings.thr=+e.target.value;store.set('ipulah.lastAlertCat',-1);saveSettings();checkAlerts()};
+$('#nRain').onchange=e=>{settings.rain=e.target.checked;saveSettings()};
+$('#nTest').onclick=async()=>{const ok=(('Notification' in window)&&Notification.permission==='granted')||await enableNotif();if(!ok)return;
+  const ipu=$('#ipuNum').textContent;const sent=await notify('IPU Lah! test','Hello boss! Kalau nampak ni, notifikasi dah jalan. IPU sekarang: '+ipu,'ipu-test');toast(sent?'Test dihantar. Check notification bar.':'Tak dapat hantar. Check setting browser.')};
+
+function checkAlerts(fresh){
+  if(!settings.on||!DATA)return;
+  const h=DATA.aq.hourly;const ai=idxNow(h.time,DATA.aq.current?.time||DATA.wx.current.time);const n=ipuAt(h,ai);const lvl=catOf(n.ipu);
+  let last=store.get('ipulah.lastAlertCat',-1);
+  if(n.ipu>=settings.thr){if(last!==lvl||fresh){notify(`IPU ${n.ipu}: ${CATS[lvl].ms}`,`${LOC.name}. ${pick(LINES[lvl])}`,'ipu-alert');store.set('ipulah.lastAlertCat',lvl)}}
+  else if(last>=0){notify(`Udara dah okay balik (IPU ${n.ipu})`,`${LOC.name}. Fuh, lega. Boleh buka tingkap dah.`,'ipu-alert');store.set('ipulah.lastAlertCat',-1)}
+  if(settings.rain){const wx=DATA.wx;const wi=idxNow(wx.hourly.time,wx.current.time);const p=Math.max(...wx.hourly.precipitation_probability.slice(wi,wi+3).map(x=>x??0));
+    const lr=store.get('ipulah.lastRain',0);if(p>=70&&Date.now()-lr>3*3600e3){notify(`Hujan ${p}% dalam 2 jam`,`${LOC.name}. Bawak payung, angkat kain kat ampaian!`,'ipu-rain');store.set('ipulah.lastRain',Date.now())}}
+}
+
+/* install prompt */
+let deferred=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;$('#btnInstall').hidden=false});
+$('#btnInstall').onclick=async()=>{if(!deferred)return;deferred.prompt();await deferred.userChoice;deferred=null;$('#btnInstall').hidden=true};
+
+/* search */
+$('#btnSearch').onclick=()=>{const p=$('#searchPanel');p.hidden=!p.hidden;if(!p.hidden)$('#q').focus()};
+$('#btnRefresh').onclick=()=>LOC?load():detect(true);
+$('#btnGps').onclick=()=>{$('#searchPanel').hidden=true;detect(true)};
+$('#searchForm').onsubmit=async e=>{e.preventDefault();const q=$('#q').value.trim();if(!q)return;const ul=$('#results');ul.innerHTML='<li>Tengah cari…</li>';
+  try{const j=await (await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=6&language=en`)).json();
+    if(!j.results?.length){ul.innerHTML='<li>Tak jumpa lah. Cuba ejaan lain?</li>';return}
+    ul.innerHTML=j.results.map((r,i)=>`<li><button type="button" data-i="${i}">${esc(r.name)} <small>${esc([r.admin1,r.country].filter(Boolean).join(', '))}</small></button></li>`).join('');
+    ul.querySelectorAll('button').forEach(b=>b.onclick=()=>{const r=j.results[+b.dataset.i];$('#searchPanel').hidden=true;ul.innerHTML='';$('#q').value='';setLoc({lat:r.latitude,lon:r.longitude,name:[r.name,r.admin1].filter(Boolean).join(', ')})});
+  }catch(err){ul.innerHTML='<li>Search tak jalan. Check internet.</li>'}};
+
+/* ---------- boot ---------- */
+drawGauge(null);$('#mascot').innerHTML=mascot(-1);showFact();
+initSW().then(refreshStatus);
+const cache=store.get('ipulah.cache',null);
+if(LOC){$('#locName').textContent=LOC.name;if(cache&&cache.loc&&cache.loc.lat===LOC.lat&&cache.loc.lon===LOC.lon){DATA={aq:cache.aq,wx:cache.wx};lastFetch=cache.t;try{render()}catch(e){}}}
+if(!LOC||LOC.auto)detect(false);else load();
+setInterval(()=>{if(LOC)load()},30*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&LOC&&Date.now()-lastFetch>15*60*1000)load()});
+</script>
+</body>
+</html>
