@@ -179,6 +179,62 @@ select{border:2px solid var(--line);border-radius:10px;padding:6px 8px;backgroun
 footer{font-size:.8rem;color:var(--muted);text-align:center;line-height:1.5}
 footer a{color:inherit}
 .skel{opacity:.55}
+
+/* scenery */
+.scene{position:relative;border:2.5px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:4px 4px 0 var(--line);background:var(--soft)}
+.scene svg{display:block;width:100%;height:clamp(190px,42vw,260px)}
+.scene svg *{transition:fill .9s ease,opacity .9s ease,stop-color .9s ease}
+.scenew{font-family:var(--f-mono);font-size:12px;fill:var(--skyInk,#14213d);letter-spacing:.04em}
+.scenecap{margin:12px 0 0;font-weight:700;font-size:1rem;line-height:1.4}
+@media (prefers-reduced-motion:no-preference){
+  .scene .cl{animation:drift 11s ease-in-out infinite}
+  .scene .cl2{animation:drift 15s ease-in-out infinite reverse}
+  .scene .sun{animation:spin 60s linear infinite;transform-box:fill-box;transform-origin:50% 50%}
+}
+
+/* ---------- motion ---------- */
+@media (prefers-reduced-motion:no-preference){
+  /* cards drift in, staggered down the page */
+  @keyframes rise{from{opacity:0;translate:0 18px}to{opacity:1;translate:0 0}}
+  .card{animation:rise .55s cubic-bezier(.2,.9,.3,1) both}
+  .wrap>section:nth-of-type(1){animation-delay:0s}
+  .wrap>section:nth-of-type(2){animation-delay:.05s}
+  .wrap>section:nth-of-type(3){animation-delay:.1s}
+  .wrap>section:nth-of-type(4){animation-delay:.15s}
+  .wrap>section:nth-of-type(5){animation-delay:.2s}
+  .wrap>section:nth-of-type(6){animation-delay:.25s}
+  .wrap>section:nth-of-type(7){animation-delay:.3s}
+  .wrap>section:nth-of-type(8){animation-delay:.35s}
+  .wrap>section:nth-of-type(9){animation-delay:.4s}
+
+  /* pollutant bars fill from empty */
+  @keyframes fillbar{from{width:0}}
+  .pgrid .pol .bar i{animation:fillbar .85s cubic-bezier(.3,1.4,.5,1) both}
+  .pgrid .pol:nth-child(1) .bar i{animation-delay:.05s}
+  .pgrid .pol:nth-child(2) .bar i{animation-delay:.12s}
+  .pgrid .pol:nth-child(3) .bar i{animation-delay:.19s}
+  .pgrid .pol:nth-child(4) .bar i{animation-delay:.26s}
+  .pgrid .pol:nth-child(5) .bar i{animation-delay:.33s}
+  .pgrid .pol:nth-child(6) .bar i{animation-delay:.4s}
+
+  /* gauge needle sweeps up from empty instead of snapping */
+  #gauge .needle{transform-box:view-box;transform-origin:150px 150px;transform:rotate(-90deg);transition:transform 1s cubic-bezier(.25,1.5,.45,1)}
+  #gauge.go .needle{transform:rotate(0deg)}
+
+  /* charts draw themselves */
+  @keyframes grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+  #ipuChart rect,#wxChart rect{transform-box:fill-box;transform-origin:50% 100%;animation:grow .55s cubic-bezier(.3,1.4,.5,1) both}
+  @keyframes drawline{to{stroke-dashoffset:0}}
+  #wxChart polyline{stroke-dasharray:1;stroke-dashoffset:1;animation:drawline 1.2s ease-out .25s forwards}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  #wxChart polygon{animation:fadein .9s ease-out .3s both}
+
+  /* big weather icon drifts and the sun turns */
+  @keyframes drift{50%{translate:3px -3px}}
+  .wxnow .big .cl{animation:drift 5.5s ease-in-out infinite}
+  @keyframes spin{to{rotate:360deg}}
+  .wxnow .big .sun{animation:spin 24s linear infinite}
+}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -225,6 +281,53 @@ footer a{color:inherit}
     </div>
     <div class="bubble" id="quote">Abang Awan tengah cari lokasi you. Kalau browser tanya, tekan "Allow" ya boss.</div>
     <div class="meta" id="heroMeta"></div>
+  </section>
+
+  <!-- SCENERY -->
+  <section class="card tilt-r" id="sceneCard">
+    <h2>Pemandangan dari situ</h2>
+    <p class="sub" id="sceneSub">Semakin rendah IPU, semakin jelas pandangan.</p>
+    <div class="scene" id="scene">
+      <svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" role="img" aria-labelledby="sceneAlt">
+        <title id="sceneAlt">Pemandangan di lokasi you</title>
+        <defs>
+          <linearGradient id="ipuSkyG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" style="stop-color:var(--sky1)"/><stop offset="1" style="stop-color:var(--sky2)"/>
+          </linearGradient>
+          <linearGradient id="ipuSmogG" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" style="stop-color:var(--smogA);stop-opacity:0"/>
+            <stop offset=".5" style="stop-color:var(--smogA);stop-opacity:.8"/>
+            <stop offset="1" style="stop-color:var(--smogA);stop-opacity:1"/>
+          </linearGradient>
+        </defs>
+        <rect width="400" height="200" style="fill:url(#ipuSkyG)"/>
+        <g class="sun"><circle cx="328" cy="46" r="23" style="fill:var(--sunF)" opacity="var(--sunO)"/></g>
+        <g style="opacity:var(--birdO)" fill="none" stroke="var(--skyInk)" stroke-width="2.2" stroke-linecap="round">
+          <path d="M104 54q7-7 13 0q6-7 13 0"/><path d="M140 38q5.5-5.5 10 0q4.5-5.5 10 0"/><path d="M74 34q5-5 9 0q4-5 9 0"/>
+        </g>
+        <g style="opacity:var(--cloudO)">
+          <path class="cl" style="fill:var(--cloudF)" d="M232 40h26a9 9 0 0 0 0-18 12 12 0 0 0-23-2 8 8 0 0 0-3 20z"/>
+          <path class="cl2" style="fill:var(--cloudF)" d="M52 72h20a7 7 0 0 0 0-14 10 10 0 0 0-19-1.5 6.5 6.5 0 0 0-1 15.5z"/>
+        </g>
+        <path style="fill:var(--mtnF)" opacity="var(--mtnFO)" d="M0 134 L52 90 L96 128 L140 76 L196 132 L244 98 L292 136 L340 102 L400 140 L400 200 L0 200 Z"/>
+        <path style="fill:var(--mtnM)" opacity="var(--mtnMO)" d="M0 152 Q68 120 138 148 Q208 178 266 144 Q328 114 400 152 L400 200 L0 200 Z"/>
+        <g style="fill:var(--tree)" opacity="var(--treeO)">
+          <path d="M58 152 l12 -32 l12 32 z"/><path d="M84 154 l10 -27 l10 27 z"/>
+          <path d="M252 150 l12 -31 l12 31 z"/><path d="M280 153 l10 -26 l10 26 z"/>
+        </g>
+        <g style="fill:var(--bld)" opacity="var(--bldO)">
+          <rect x="132" y="128" width="24" height="50" rx="3"/>
+          <rect x="160" y="140" width="18" height="38" rx="3"/>
+          <rect x="182" y="118" width="28" height="60" rx="3"/>
+          <rect x="214" y="146" width="20" height="32" rx="3"/>
+        </g>
+        <rect y="176" width="400" height="24" style="fill:var(--gnd)"/>
+        <rect y="170" width="400" height="30" style="fill:var(--gnd)"/>
+        <rect width="400" height="200" style="fill:url(#ipuSmogG)" opacity="var(--smogO)"/>
+        <text x="14" y="30" class="scenew"><tspan id="sceneLoc"></tspan></text>
+      </svg>
+    </div>
+    <p class="scenecap" id="sceneCap"></p>
   </section>
 
   <!-- POLLUTANTS -->
@@ -407,9 +510,9 @@ function wxType(c){
 }
 const WXMS={clear:'Cerah',partly:'Separa mendung',cloudy:'Mendung',fog:'Berkabus',drizzle:'Gerimis',rain:'Hujan',storm:'Ribut petir',snow:'Salji? Kat sini?'};
 function sunG(cx,cy,r){let s='';for(let k=0;k<8;k++){const a=k*Math.PI/4,x1=cx+Math.cos(a)*(r+3),y1=cy+Math.sin(a)*(r+3),x2=cx+Math.cos(a)*(r+7),y2=cy+Math.sin(a)*(r+7);s+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/>`}
-  return s+`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffcf3f" stroke="${INK}" stroke-width="2.4"/>`}
+  return `<g class="sun">`+s+`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffcf3f" stroke="${INK}" stroke-width="2.4"/></g>`}
 function moonG(cx,cy,r){return `<path d="M${cx+r*.35} ${cy-r} a${r} ${r} 0 1 0 ${r*.65} ${r*1.55} a${r*.85} ${r*.85} 0 0 1 -${r*.65} -${r*1.55}z" fill="#ffe9a8" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>`}
-const cloudG=(dx=0,dy=0,fill='#fff')=>`<path transform="translate(${dx} ${dy})" d="M13 36h23a8 8 0 0 0 0-16 11 11 0 0 0-21-2 7.5 7.5 0 0 0-2 18z" fill="${fill}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>`;
+const cloudG=(dx=0,dy=0,fill='#fff')=>`<path class="cl" transform="translate(${dx} ${dy})" d="M13 36h23a8 8 0 0 0 0-16 11 11 0 0 0-21-2 7.5 7.5 0 0 0-2 18z" fill="${fill}" stroke="${INK}" stroke-width="2.4" stroke-linejoin="round"/>`;
 function wxIcon(code,day=1){
   const t=wxType(code);let g='';
   if(t==='clear')g=day?sunG(24,24,9):moonG(22,24,11);
@@ -460,6 +563,9 @@ function mascot(level){
 /* Gauge */
 const valFrac=v=>{v=Math.max(0,Math.min(500,v));const bands=[[0,50],[50,100],[100,200],[200,300],[300,500]];for(let k=0;k<5;k++){const[a,b]=bands[k];if(v<=b)return (k+(v-a)/(b-a))/5}return 1};
 function arcPath(cx,cy,r,f0,f1){const a0=Math.PI*(1+f0),a1=Math.PI*(1+f1);return `M${(cx+r*Math.cos(a0)).toFixed(2)} ${(cy+r*Math.sin(a0)).toFixed(2)} A${r} ${r} 0 0 1 ${(cx+r*Math.cos(a1)).toFixed(2)} ${(cy+r*Math.sin(a1)).toFixed(2)}`}
+const motionOK=()=>!matchMedia('(prefers-reduced-motion: reduce)').matches;
+function countTo(el,to,dur=900){const from=+el.dataset.v||0;el.dataset.v=to;if(from===to)return;if(!motionOK()){el.textContent=to;return}
+  const t0=performance.now();const step=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(step)};requestAnimationFrame(step)}
 function drawGauge(v){
   const cx=150,cy=150,r=118;let s='';
   s+=`<path d="${arcPath(cx,cy,r,0,1)}" fill="none" stroke="var(--line)" stroke-width="34" stroke-linecap="round"/>`;
@@ -467,7 +573,8 @@ function drawGauge(v){
   ['0','50','100','200','300','500'].forEach((t,i)=>{const a=Math.PI*(1+i/5),x=cx+(r-30)*Math.cos(a),y=cy+(r-30)*Math.sin(a);s+=`<text x="${x.toFixed(1)}" y="${(y+4).toFixed(1)}" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" fill="var(--muted)">${t}</text>`});
   if(v!=null){const a=Math.PI*(1+valFrac(v));const x=cx+(r)*Math.cos(a),y=cy+(r)*Math.sin(a);
     s+=`<g class="needle"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13" fill="var(--paper)" stroke="var(--line)" stroke-width="4"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="5" fill="var(--line)"/></g>`}
-  $('#gauge').innerHTML=s;
+  const gEl=$('#gauge');gEl.innerHTML=s;
+  if(motionOK()){gEl.classList.remove('go');void gEl.getBoundingClientRect();requestAnimationFrame(()=>requestAnimationFrame(()=>gEl.classList.add('go')))}
 }
 
 /* ---------- state ---------- */
@@ -520,7 +627,7 @@ function render(){
   const h=aq.hourly;const ai=idxNow(h.time,aq.current?.time||wx.current.time);
   const now=ipuAt(h,ai);const lvl=catOf(now.ipu);const cat=CATS[lvl];
   const root=document.documentElement;root.style.setProperty('--cat',cat.c);root.style.setProperty('--catfg',cat.fg);
-  $('#ipuNum').textContent=now.ipu;drawGauge(now.ipu);
+  countTo($('#ipuNum'),now.ipu);drawGauge(now.ipu);
   $('#mascot').innerHTML=mascot(lvl);
   $('#catPill').innerHTML=`${esc(cat.ms)} <em>${esc(cat.en)}</em>`;
   $('#quote').textContent=pick(LINES[lvl]);
@@ -564,8 +671,40 @@ function render(){
   $('#adviceSub').textContent=`Tahap sekarang: ${cat.ms} (IPU ${now.ipu}).`;
   $('#advice').innerHTML=ADVICE[lvl].map(a=>`<li>${ui('check')}<span>${esc(a)}</span></li>`).join('');
   $('#scale').innerHTML=CATS.map((c,i)=>`<div class="${i===lvl?'on':''}" style="background:${c.c};color:${c.fg}">${c.ms}<small>${RANGES[i][0]}–${i===4?'500+':RANGES[i][1]}</small></div>`).join('');
+
+  // scenery
+  renderScene(now.ipu);
+  const sn=LOC.name||'';$('#sceneLoc').textContent=sn.length>26?sn.slice(0,25)+'…':sn;
 }
 function compass(d){return ['U','TL','T','TG','S','BD','B','BL'][Math.round(((d%360)/45))%8]}
+
+/* ---------- scenery: the clearer the air, the further you can see ---------- */
+const HAZE=[[0,0],[50,.12],[100,.35],[200,.6],[300,.83],[500,1]];
+const CLEAR={sky1:'#5ec2f2',sky2:'#e6f6fd',sunF:'#ffd75e',cloudF:'#ffffff',mtnF:'#93b6cf',mtnM:'#3f9a63',tree:'#2b6b49',bld:'#5f6f80',gnd:'#2f5d43',smogA:'#d8cdb4',skyInk:'#14213d'};
+const SMOG={sky1:'#b3a184',sky2:'#cbbca1',sunF:'#e8d9a8',cloudF:'#ded3bf',mtnF:'#a89a84',mtnM:'#8a7f6c',tree:'#6f6656',bld:'#7d7365',gnd:'#6b6355',smogA:'#e3d9c2',skyInk:'#f6efdd'};
+const SCENE_CAPS=[
+ 'Langit biru gila. Gunung boleh nampak sampai kat situ, boss.',
+ 'Light kabus je. Pandangan masih okay, tak perlu panik.',
+ 'Asap dah tebal. Gunung separuh hilang. Nanti petang biasanya okay.',
+ 'Kabus tebal sangat. Menara jauh pun tak kelihatan.',
+ 'Pemandangan hilang Hitchcock. Duduk dalam rumah, boss.'];
+function hazeOf(v){for(let i=1;i<HAZE.length;i++)if(v<=HAZE[i][0]){const[a,x]=HAZE[i-1],[b,y]=HAZE[i];return x+(v-a)*(y-x)/(b-a)}return 1}
+function hex2rgb(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]}
+function mix(a,b,t){const A=hex2rgb(a),B=hex2rgb(b);return'#'+A.map((v,i)=>Math.round(v+(B[i]-v)*t).toString(16).padStart(2,'0')).join('')}
+function renderScene(ipu){
+  const h=hazeOf(ipu),el=$('#scene');if(!el)return;
+  for(const k in CLEAR)el.style.setProperty('--'+k,mix(CLEAR[k],SMOG[k],h));
+  el.style.setProperty('--sunO',(1-h*.88).toFixed(3));
+  el.style.setProperty('--birdO',(1-h*2.6).toFixed(3));
+  el.style.setProperty('--cloudO',(.95-h*.7).toFixed(3));
+  el.style.setProperty('--mtnFO',(1-h*.88).toFixed(3));
+  el.style.setProperty('--mtnMO',(1-h*.7).toFixed(3));
+  el.style.setProperty('--treeO',(1-h*.58).toFixed(3));
+  el.style.setProperty('--bldO',(1-h*.5).toFixed(3));
+  el.style.setProperty('--smogO',h.toFixed(3));
+  $('#sceneCap').textContent=SCENE_CAPS[Math.min(SCENE_CAPS.length-1,Math.floor(h*SCENE_CAPS.length))];
+  $('#sceneAlt').textContent=`Pemandangan kabus. ${SCENE_CAPS[Math.min(SCENE_CAPS.length-1,Math.floor(h*SCENE_CAPS.length))]}`;
+}
 function wxQuip(cw,t,rain2,uvmax){
   if(t==='storm')return 'Ribut petir on the way! Jangan lepak bawah pokok atau tengah padang, bahaya tau.';
   if(t==='rain'||t==='drizzle')return pick(['Hujan turun, bawak payung. Kain kat ampaian tu, angkat cepat!','Jalan licin, bawak kereta slow-slow. Jem confirm panjang.']);
@@ -585,7 +724,7 @@ function drawBars(fc){
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ramalan IPU 24 jam">`;
   Array.from({length:vmax/50+1},(_,k)=>k*50).filter(v=>vmax<=200||v%100===0).forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--muted)" stroke-opacity=".25" stroke-dasharray="3 3"/><text x="${L-5}" y="${y(v)+3}" text-anchor="end" font-size="9" font-family="DM Mono,monospace" fill="var(--muted)">${v}</text>`});
   if(vmax>=100)s+=`<line x1="${L}" x2="${W-R}" y1="${y(100)}" y2="${y(100)}" stroke="var(--hibiscus)" stroke-width="1.5"/><text x="${L+4}" y="${y(100)-4}" font-size="9" font-weight="700" font-family="DM Mono,monospace" fill="var(--hibiscus)" stroke="var(--paper)" stroke-width="3" paint-order="stroke">had sihat 100</text>`;
-  fc.forEach((f,i)=>{const x=L+i*bw+1.5,h=Math.max(2,y(0)-y(f.v));s+=`<rect x="${x.toFixed(1)}" y="${(y(0)-h).toFixed(1)}" width="${(bw-3).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${CATS[catOf(f.v)].c}" stroke="var(--line)" stroke-width="1.2"><title>${f.t.slice(11,16)}: IPU ${f.v}</title></rect>`;
+  fc.forEach((f,i)=>{const x=L+i*bw+1.5,h=Math.max(2,y(0)-y(f.v));s+=`<rect x="${x.toFixed(1)}" y="${(y(0)-h).toFixed(1)}" width="${(bw-3).toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${CATS[catOf(f.v)].c}" stroke="var(--line)" stroke-width="1.2" style="animation-delay:${Math.min(i*26,760)}ms"><title>${f.t.slice(11,16)}: IPU ${f.v}</title></rect>`;
     if(i%6===0)s+=`<text x="${x+bw/2}" y="${H-8}" text-anchor="middle" font-size="9" font-family="DM Mono,monospace" fill="var(--muted)">${f.t.slice(11,16)}</text>`});
   $('#ipuChart').innerHTML=s+'</svg>';
 }
@@ -596,10 +735,10 @@ function drawTemp(hh,wi){
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Suhu dan peluang hujan 24 jam">`;
   [lo,Math.round((lo+hi)/2),hi].forEach(v=>{s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--muted)" stroke-opacity=".25" stroke-dasharray="3 3"/><text x="${L-5}" y="${y(v)+3}" text-anchor="end" font-size="9" font-family="DM Mono,monospace" fill="var(--muted)">${v}°</text>`});
   [0,50,100].forEach(p=>s+=`<text x="${W-R+5}" y="${yp(p)+3}" font-size="9" font-family="DM Mono,monospace" fill="var(--c1)">${p}%</text>`);
-  P.forEach((p,i)=>{const h=yp(0)-yp(p);if(h>0)s+=`<rect x="${(L+i*bw+1.5).toFixed(1)}" y="${yp(p).toFixed(1)}" width="${(bw-3).toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="var(--c1)" fill-opacity=".35"><title>${tm[i].slice(11,16)}: ${p}% hujan</title></rect>`});
+  P.forEach((p,i)=>{const h=yp(0)-yp(p);if(h>0)s+=`<rect x="${(L+i*bw+1.5).toFixed(1)}" y="${yp(p).toFixed(1)}" width="${(bw-3).toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="var(--c1)" fill-opacity=".35" style="animation-delay:${Math.min(i*22,660)}ms"><title>${tm[i].slice(11,16)}: ${p}% hujan</title></rect>`});
   const pts=T0.map((v,i)=>`${(L+i*bw+bw/2).toFixed(1)},${y(v).toFixed(1)}`);
   s+=`<polygon points="${L+bw/2},${y(lo)} ${pts.join(' ')} ${(L+(n-1)*bw+bw/2).toFixed(1)},${y(lo)}" fill="var(--sun)" fill-opacity=".35"/>`;
-  s+=`<polyline points="${pts.join(' ')}" fill="none" stroke="var(--hibiscus)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
+  s+=`<polyline pathLength="1" points="${pts.join(' ')}" fill="none" stroke="var(--hibiscus)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;
   const iMax=T0.indexOf(Math.max(...T0));s+=`<circle cx="${L+iMax*bw+bw/2}" cy="${y(T0[iMax])}" r="4.5" fill="var(--hibiscus)" stroke="var(--line)" stroke-width="1.5"/><text x="${L+iMax*bw+bw/2}" y="${y(T0[iMax])-8}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--ink)">${Math.round(T0[iMax])}°</text>`;
   tm.forEach((t,i)=>{if(i%6===0)s+=`<text x="${L+i*bw+bw/2}" y="${H-8}" text-anchor="middle" font-size="9" font-family="DM Mono,monospace" fill="var(--muted)">${t.slice(11,16)}</text>`});
   $('#wxChart').innerHTML=s+'</svg>';
